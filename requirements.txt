@@ -1,0 +1,9 @@
+pandas>=2.0
+numpy
+matplotlib
+seaborn
+jupyter
+
+# only needed for the optional "load into SQL Server" part of the notebook
+sqlalchemy
+pyodbc
