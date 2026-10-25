@@ -1,230 +1,239 @@
-# 🏢 Enterprise HR Analytics & Workforce Intelligence
+# 🏢 HR Workforce Analytics
 
 [![Author](https://img.shields.io/badge/Author-Yashika%20Singh-blue?style=for-the-badge&logo=github)](https://github.com/Yasheekaa)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![SQL Server](https://img.shields.io/badge/SQL%20Server-Transact--SQL-CC292B?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
-[![Power BI](https://img.shields.io/badge/Power%20BI-Data%20Visualization-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
+[![Python](https://img.shields.io/badge/Python-Pandas%20%7C%20Seaborn-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![SQL Server](https://img.shields.io/badge/SQL%20Server-T--SQL-CC292B?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server)
+[![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](./LICENSE)
 
----
-
-## 📌 Executive Summary
-
-Modern enterprise human resources operations require data-driven strategies to minimize unplanned turnover, streamline talent acquisition, and maximize employee development ROI. This repository delivers an **end-to-end HR analytics and business intelligence solution** tracking the full employee lifecycle—from candidate recruitment pipelines to workforce engagement, performance evaluations, learning & development outcomes, and attrition drivers.
-
-Using four interconnected operational datasets (totaling 3,000+ core employee records and recruitment applicant logs), this project demonstrates practical data engineering, rigorous statistical EDA, production-ready SQL analytics, and executive-level Power BI reporting.
+An end-to-end HR analytics project where I clean and combine 4 HR datasets with **Python**, answer business questions with **SQL Server**, and build a 3-page **Power BI** dashboard. The main goal is to understand **who is leaving the company, when, and why**.
 
 ---
 
-## 🚀 Key Business Insights
+## 📌 Questions I wanted to answer
 
-* **Workforce Stability & Overall Attrition**: Across the organization, the baseline employee attrition rate stands at **12.87%**, representing 386 terminations out of 3,000 recorded personnel.
-* **Critical Tenure Milestones**: Turnover spikes prominently within the **first 1 to 3 years of tenure**, establishing that post-onboarding career development is critical to early retention.
-* **Engagement & Satisfaction Correlation**: Personnel who voluntary exit consistently report lower engagement scores ($\le 2.0$) and reduced satisfaction ratings compared to retained staff.
-* **L&D Impact on Retention**: Employees successfully completing structured internal training programs exhibit a statistically significant decrease in turnover relative to those who fail or withdraw from training.
-* **Talent Acquisition Funnel Velocity**: Analysis across application status tiers (*Applied*, *In Review*, *Interviewing*, *Offered*, *Rejected*) reveals salary expectation disparities across education tiers and highlights operational conversion bottlenecks.
+1. What is the overall attrition rate and which departments / job titles lose the most people?
+2. In which year of service do employees leave the most?
+3. Do engagement, satisfaction or work-life balance scores predict who will leave?
+4. Does training outcome or training cost have any effect on attrition?
+5. How does the recruitment pipeline look (status, education level, offer rate)?
 
 ---
 
-## 🏗 System Architecture & Workflow
+## 🗃️ Dataset
+
+Synthetic HR sample data from Kaggle (fictional company, used only for learning).
+
+| File | Rows | What it contains |
+| :--- | :---: | :--- |
+| `raw_data/employee_data.csv` | 3,000 | Employee details: start / exit date, title, department, status, pay zone, gender, DOB, performance |
+| `raw_data/employee_engagement_survey_data.csv` | 3,000 | Engagement, satisfaction and work-life balance scores (1 to 5) |
+| `raw_data/training_and_development_data.csv` | 3,000 | Training program, type, outcome, duration and cost |
+| `raw_data/recruitment_data.csv` | 3,000 | Job applicants: education, experience, desired salary, status |
+
+The first three files are joined on the employee id (`EmpID` / `Employee ID`).
+
+---
+
+## 🛠️ Tools Used
+
+| Tool | Used for |
+| :--- | :--- |
+| Python (pandas, numpy) | Cleaning, merging, feature creation |
+| matplotlib, seaborn | EDA charts |
+| scipy | t-test and chi-square test |
+| SQL Server Express + SSMS | Business queries, CTEs, window functions, a view |
+| Power BI + DAX | Interactive dashboard |
+
+---
+
+## 🔄 Workflow
 
 ```mermaid
 flowchart LR
-    A[Raw HR Data\n• Employee Records\n• Engagement Surveys\n• L&D Logs\n• Recruitment Apps] --> B[Data Cleaning & Prep\n• Python & Pandas\n• Missing Value Imputation\n• Feature Engineering]
-    B --> C[Exploratory Data Analysis\n• 10 Distribution & Attrition Charts\n• Tenure & Age Cohorts]
-    B --> D[Relational Database / SQL\n• Clean Relational Schema\n• 14 Business-Critical Queries\n• Risk-Flagging & Aggregations]
-    D --> E[Interactive Power BI BI Suite\n• Page 1: Workforce Overview\n• Page 2: Attrition & Retention\n• Page 3: Recruitment Funnel]
+    A[raw_data/ 4 CSV files] --> B[eda_analysis.ipynb<br/>cleaning + merge]
+    B --> C[clean_data/<br/>cleaned_hr_data.csv<br/>cleaned_recruitment.csv]
+    B --> D[charts/ 16 PNG charts]
+    C --> E[SQL Server<br/>hr_analytics.sql]
+    E --> F[Power BI<br/>hr_analytics.pbix]
 ```
 
 ---
 
-## 📊 Dashboard Showcase
+## 🧹 Data Cleaning
 
-The Power BI dashboard suite provides multi-perspective visibility into organizational health, segmented into three dedicated analytical views:
+- Removed extra spaces from text columns (`Production` had trailing spaces so it was grouped wrongly).
+- Converted every date with its exact format (`20-Sep-19` for start / exit dates, `07-10-1969` for DOB).
+- Created **`Attrition_Flag`** from `EmployeeStatus`: only *Voluntarily Terminated* and *Terminated for Cause* count as attrition.
+- Calculated **Age** and **Tenure** using a fixed snapshot date (6 Aug 2023, the last date in the data). For leavers, tenure stops at their exit date.
+- Created **Age_Group** (18-30 to 60+) and **Tenure_Band** (<1 yr to 4+ yrs).
+- Merged employee + survey + training into one table (3,000 rows, 43 columns).
+- Recruitment: converted dates, added applicant age and dropped phone / email / address columns.
 
-### 1. Workforce Overview
-Executive summary of organizational headcount, department distributions, demographic profiles, and compensation banding.
+### Mistakes I fixed in version 2
+
+After finishing the first version I went back and reviewed my own work. These were the problems I found:
+
+| Problem in v1 | Impact | Fix |
+| :--- | :--- | :--- |
+| Notebook used paths like `C:\Users\DELL\...` | Nobody else could run it | Relative paths from the `eda/` folder |
+| Cleaned CSV was exported **before** the attrition flag was fixed | `Attrition_Flag` was 0 for every row in `cleaned_hr_data.csv` | Flag is created first, then exported |
+| SQL table used a flag based on `TerminationType` | Dashboard showed 12.87% rate but "1K terminated" | One definition everywhere (`EmployeeStatus`) |
+| Age bins stopped at 70 | 707 employees had no age group and were filtered out of the dashboard | New bins up to 60+ |
+| Age and tenure calculated from today's date | Values changed on every run, leavers kept gaining tenure | Fixed snapshot date + exit date for leavers |
+| README said low engagement and failed training lead to more exits | I had not actually tested this | Tested it (see insights below), both claims were wrong |
+| `Offer Rate` DAX measure filtered `[State]` instead of `[Status]` | Always returned 0 | Corrected measure in [`dashboard/README.md`](dashboard/README.md) |
+
+---
+
+## 🚀 Key Insights
+
+- **Attrition rate is 12.9%** (387 of 3,000 employees). Exits are growing every year: 15 in 2019, 118 in 2022 and already 150 by August 2023.
+- **The first year is the riskiest.** 24.6% of employees with under 1 year of tenure left, compared to 2.9% for 4+ years.
+- **Software Engineering (17.4%) and Production (15.9%)** have the highest department rates. Production alone has 83% of all leavers because it is the largest department.
+- **Production Technician II** (23.1%) and **BI Developer** (27.3%) are the job titles with the highest attrition.
+- Employees on a **PIP** leave the most (19.4% vs 10.8% for "Exceeds").
+- **Survey scores do not explain attrition here.** Leavers and stayers have almost the same engagement (2.90 vs 2.95, t-test p = 0.55), satisfaction and work-life balance.
+- **Training outcome is not significant** (chi-square p = 0.074). People who *passed* training actually left a bit more (15.6%).
+- Recruitment offer rate is around 19% to 22% for every education level, and desired salary is about $65k for all of them.
+
+**Suggestions:** focus on onboarding and the first 12 months, look into Production Technician II and the BI / software teams, follow up properly on PIPs, and use exit interviews since the engagement survey is not picking up who will leave.
+
+---
+
+## 📊 EDA Charts
+
+| | |
+| :---: | :---: |
+| ![Attrition by tenure](charts/10_tenure_attrition.png) | ![Attrition by department](charts/2_attrition_dept.png) |
+| ![Job titles](charts/13_job_title_attrition.png) | ![Survey scores](charts/11_survey_scores_attrition.png) |
+| ![Hires vs exits](charts/15_hires_vs_exits.png) | ![Training outcome](charts/12_training_outcome_attrition.png) |
+
+All 16 charts are in the [`charts/`](charts) folder and are created by the notebook.
+
+---
+
+## 💡 SQL Highlights
+
+[`sql/hr_analytics.sql`](sql/hr_analytics.sql) has data checks, 18 analysis queries and one view. Two examples:
+
+**Attrition by tenure band**
+```sql
+SELECT
+    Tenure_Band,
+    COUNT(*) AS total_employees,
+    SUM(Attrition_Flag) AS left_count,
+    ROUND(SUM(Attrition_Flag) * 100.0 / COUNT(*), 2) AS attrition_rate_pct,
+    ROUND(AVG(Tenure_Years), 2) AS avg_tenure_years
+FROM hr_data
+GROUP BY Tenure_Band
+ORDER BY avg_tenure_years;
+```
+
+**Hires vs exits per year with a running total (CTE + window function)**
+```sql
+WITH hires AS (
+    SELECT YEAR(StartDate) AS year_no, COUNT(*) AS hires
+    FROM hr_data
+    GROUP BY YEAR(StartDate)
+),
+exits AS (
+    SELECT YEAR(ExitDate) AS year_no, COUNT(*) AS exits
+    FROM hr_data
+    WHERE Attrition_Flag = 1
+    GROUP BY YEAR(ExitDate)
+)
+SELECT
+    h.year_no,
+    h.hires,
+    COALESCE(e.exits, 0) AS exits,
+    SUM(h.hires - COALESCE(e.exits, 0)) OVER (ORDER BY h.year_no) AS running_net_change
+FROM hires h
+LEFT JOIN exits e ON h.year_no = e.year_no
+ORDER BY h.year_no;
+```
+
+---
+
+## 📈 Power BI Dashboard
+
+Three pages: **Workforce Overview**, **Attrition & Retention** and **Recruitment Pipeline**.
+The DAX measures and the fixes from the review are documented in [`dashboard/README.md`](dashboard/README.md).
+
+> The screenshots below are from version 1. Some attrition numbers in them (for example "1K terminated") came from the old flag and will match the notebook once the report is refreshed with the new data.
+
+### Workforce Overview
 ![Workforce Overview](./screenshots/page1%20workforce.png)
 
-### 2. Attrition & Retention Analysis
-Deep dive into historical turnover drivers, analyzing departures by department, performance scores, tenure cohorts, and engagement ratings.
+### Attrition & Retention
 ![Attrition Analysis](./screenshots/attrition.png)
 
-### 3. Recruitment Pipeline
-Full-funnel talent acquisition tracking, candidate qualifications, expected compensation benchmarks, and hiring stage conversion metrics.
+### Recruitment Pipeline
 ![Recruitment Pipeline](./screenshots/recruitment.png)
 
 ---
 
-## 🗂 Project Structure
+## 🗂️ Project Structure
 
 ```text
 HR-Workforce-Analytics/
-├── .gitignore                      # Standard Python, Jupyter, OS exclusion rules
-├── LICENSE                         # MIT License (Yashika Singh)
-├── README.md                       # Comprehensive project documentation
-├── charts/                         # Exported exploratory data analysis charts
-│   ├── 1_attrition_count.png
-│   ├── 2_attrition_dept.png
-│   ├── 3_gender_attrition.png
-│   ├── 4_age_attrition.png
-│   ├── 5_performance_dist.png
-│   ├── 6_perf_attrition.png
-│   ├── 7_engagement_dist.png
-│   ├── 8_training_outcome.png
-│   ├── 9_recruitment_status.png
-│   └── 10_tenure_attrition.png
-├── clean_data/                     # Cleaned, standardized, and merged CSV datasets
-│   ├── cleaned_hr_data.csv         # Master merged dataset (Demographics + Survey + Training)
-│   ├── cleaned_recruitment.csv     # Cleaned candidate pipeline dataset
-│   └── recruitment_data.csv        # Structured recruitment staging dataset
-├── dashboard/                      # Production Power BI report files
-│   └── hr_analytics.pbix           # Multi-page interactive Power BI dashboard
-├── eda/                            # Jupyter Notebooks for exploratory analysis
-│   └── eda_analysis.ipynb          # End-to-end data cleaning, EDA, and chart generation
-├── raw_data/                       # Source operational CSV datasets
-│   ├── employee_data.csv           # Baseline employee demographic & employment records
-│   ├── employee_engagement_survey_data.csv # Survey ratings (satisfaction, engagement, WLB)
-│   └── training_and_development_data.csv   # Training course enrollments, costs, and results
-├── screenshots/                    # High-resolution dashboard view exports
-│   ├── page1 workforce.png
-│   ├── attrition.png
-│   └── recruitment.png
-└── sql/                            # Production SQL analysis scripts
-    └── Hr_analytics.sql            # 14 structured queries covering KPIs, cohorts, and funnels
+├── raw_data/                  # original CSV files (4)
+├── clean_data/
+│   ├── cleaned_hr_data.csv    # employee + survey + training (3000 x 43)
+│   └── cleaned_recruitment.csv
+├── eda/
+│   └── eda_analysis.ipynb     # cleaning, EDA, statistical tests, SQL upload
+├── charts/                    # 16 charts saved by the notebook
+├── sql/
+│   └── hr_analytics.sql       # data checks + 18 queries + view (T-SQL)
+├── dashboard/
+│   ├── hr_analytics.pbix      # Power BI report
+│   └── README.md              # DAX measures and dashboard fixes
+├── screenshots/               # dashboard screenshots
+├── requirements.txt
+└── LICENSE
 ```
 
 ---
 
-## 📋 Data Dictionary & Schema Overview
+## ⚙️ How to Run
 
-### 1. Master HR Dataset (`cleaned_hr_data.csv`)
-| Column | Type | Description |
-| :--- | :--- | :--- |
-| `EmpID` | Integer | Unique identifier for each employee |
-| `FirstName`, `LastName` | String | Employee legal name |
-| `StartDate`, `ExitDate` | Date | Initial hire date and departure date (if applicable) |
-| `Title`, `DepartmentType` | String | Job title and functional department (Production, IT/IS, Sales, Admin) |
-| `EmployeeStatus` | String | Current employment status (Active, Voluntarily Terminated, etc.) |
-| `EmployeeType` | String | Employment classification (Full-Time, Part-Time, Contract) |
-| `PayZone` | String | Geographic compensation tier (Zone A, Zone B, Zone C) |
-| `TerminationType` | String | Nature of separation (Voluntary, Involuntary, Retirement, Resignation) |
-| `DOB`, `Age`, `Age_Group` | Mixed | Birth date, derived numerical age, and demographic band |
-| `GenderCode`, `RaceDesc` | String | Demographic identifiers for diversity & inclusion monitoring |
-| `Performance Score` | String | Annual appraisal rating (Exceeds, Fully Meets, Needs Improvement, PIP) |
-| `Attrition_Flag` | Integer | Binary indicator (`1` = Departed, `0` = Retained) |
-| `Tenure_Years` | Float | Calculated length of service in years |
-| `Engagement Score` | Integer | Internal survey metric (Scale 1–5) |
-| `Satisfaction Score` | Integer | Job satisfaction survey metric (Scale 1–5) |
-| `Work-Life Balance Score` | Integer | Work-life equilibrium rating (Scale 1–5) |
-| `Training Program Name` | String | Enrolled professional development module |
-| `Training Outcome` | String | Completion status (Passed, Failed, Completed, Incomplete) |
-| `Training Cost` | Decimal | Direct expenditure per training session (USD) |
-
-### 2. Recruitment Pipeline (`cleaned_recruitment.csv`)
-| Column | Type | Description |
-| :--- | :--- | :--- |
-| `Applicant_ID` | Integer | Unique candidate identifier |
-| `Application_Date` | Date | Application submission timestamp |
-| `Job_Title` | String | Target requisition title |
-| `Education_Level` | String | Highest completed credential (Bachelor's, Master's, PhD) |
-| `Years_of_Experience` | Integer | Prior relevant professional experience |
-| `Desired_Salary` | Decimal | Target base compensation requested by applicant |
-| `Status` | String | Pipeline stage (Applied, In Review, Interviewing, Offered, Rejected) |
-
----
-
-## 💡 SQL Analytics Showcase
-
-The project includes **14 targeted business queries** formulated in Transact-SQL (`sql/Hr_analytics.sql`). Selected query highlights include:
-
-### Query 1: Organizational Attrition Baseline
-```sql
-SELECT 
-    COUNT(*) AS total_employees,
-    SUM(Attrition_Flag) AS total_terminated,
-    ROUND(SUM(Attrition_Flag) * 100.0 / COUNT(*), 2) AS attrition_rate_pct
-FROM hr_data;
-```
-* **Business Value**: Delivers the primary executive KPI benchmarking workforce stability.
-
-### Query 2: Early Warning Radar: At-Risk Disengaged Staff
-```sql
-SELECT 
-    [Performance Score],
-    [Engagement Score],
-    COUNT(*) AS total_employees,
-    SUM(Attrition_Flag) AS terminated_count,
-    ROUND(SUM(Attrition_Flag) * 100.0 / COUNT(*), 2) AS attrition_rate_pct
-FROM hr_data
-WHERE [Engagement Score] <= 2
-GROUP BY [Performance Score], [Engagement Score]
-ORDER BY attrition_rate_pct DESC;
-```
-* **Business Value**: Identifies high-performing yet disengaged staff early, enabling HR business partners to intervene with proactive retention plans before departures occur.
-
-### Query 3: Training Program ROI & Retention Impact
-```sql
-SELECT 
-    [Training Program Name],
-    COUNT(*) AS total_trainees,
-    SUM(Attrition_Flag) AS terminated_count,
-    ROUND(AVG([Training Cost]), 2) AS avg_training_cost_usd,
-    ROUND(AVG([Training Duration(Days)]), 1) AS avg_duration_days,
-    ROUND(SUM(Attrition_Flag) * 100.0 / COUNT(*), 2) AS attrition_rate_pct
-FROM hr_data
-GROUP BY [Training Program Name]
-ORDER BY attrition_rate_pct DESC;
-```
-* **Business Value**: Correlates L&D budget allocations with long-term retention to guide strategic training vendor contracts.
-
----
-
-## ⚙️ Installation & Usage Guide
-
-### Prerequisites
-* Python 3.10+ with Jupyter Lab or Notebook
-* Microsoft SQL Server or PostgreSQL
-* Microsoft Power BI Desktop (for `.pbix` dashboard exploration)
-
-### 1. Clone the Repository
 ```bash
 git clone https://github.com/Yasheekaa/HR-Workforce-Analytics.git
 cd HR-Workforce-Analytics
+pip install -r requirements.txt
+cd eda
+jupyter notebook eda_analysis.ipynb
 ```
 
-### 2. Environment Setup & Data Processing
-```bash
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-
-# Install required analytical dependencies
-pip install pandas numpy matplotlib seaborn jupyter
-
-# Launch the exploratory notebook
-jupyter notebook eda/eda_analysis.ipynb
-```
-
-### 3. Database Execution
-* Open SQL Server Management Studio (SSMS) or your preferred SQL IDE.
-* Import `clean_data/cleaned_hr_data.csv` and `clean_data/recruitment_data.csv` into target tables `hr_data` and `recruitment_data`.
-* Execute the queries inside `sql/Hr_analytics.sql` to reproduce organizational KPIs.
-
-### 4. Interactive Dashboard
-* Launch **Microsoft Power BI Desktop**.
-* Open `dashboard/hr_analytics.pbix`.
-* Refresh data connections if prompted to point to your local clean CSV directory.
+1. Run all cells. The cleaned files and charts are created again in `clean_data/` and `charts/`.
+2. **SQL (optional):** create a database called `hr_analytics` in SQL Server, set `LOAD_TO_SQL = True` in the last cell and run it. Then open `sql/hr_analytics.sql` in SSMS.
+3. **Power BI:** open `dashboard/hr_analytics.pbix` and change the SQL Server name in *Transform data > Data source settings* if yours is different.
 
 ---
 
-## 👩‍💻 Author & Contact
+## 📚 What I Learned
+
+- Always check *how* a column is filled before using it. `TerminationType` looked perfect for an attrition flag but it was filled for active employees too.
+- The order of cells in a notebook matters. I exported the CSV before fixing the flag and did not notice until I checked the file.
+- Rates are more useful than counts when groups have very different sizes.
+- A chart can look like it proves something. Running a simple t-test / chi-square showed that two of my original claims were not true.
+
+## 🔮 Next Steps
+
+- Refresh the Power BI report with the fixed data and update the screenshots.
+- Try a simple logistic regression to see which features predict attrition together.
+- Add a monthly attrition trend page in the dashboard.
+
+---
+
+## 👩‍💻 Author
 
 **Yashika Singh**
 * GitHub: [@Yasheekaa](https://github.com/Yasheekaa)
+* LinkedIn: [Yashika Singh](https://www.linkedin.com/in/yashika-singh-33983a329/)
 * Email: [yashikasingh120104@gmail.com](mailto:yashikasingh120104@gmail.com)
 
----
-
 ## 📄 License
-This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
+
+This project is licensed under the MIT License, see the [LICENSE](./LICENSE) file for details.
